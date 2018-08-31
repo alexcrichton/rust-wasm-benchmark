@@ -1,0 +1,124 @@
+<html>
+  <body>
+    <script>
+      window.thunk = function() {};
+      window.add = function(a, b) { return a + b; };
+      delete WebAssembly.instantiateStreaming;
+    </script>
+    <script src='wasm_bindgen.js'></script>
+    <script src='bm_stdweb.js'></script>
+    <script>
+      // wasm-bindgen tests
+      wasm_bindgen('./wasm_bindgen_bg.wasm').then(run_wasm_bindgen);
+      function run_wasm_bindgen() {
+        run('wasm-bindgen', wasm_bindgen);
+      }
+
+      // // raw tests
+      fetch('./raw.wasm')
+        .then(r => r.arrayBuffer())
+        .then(r => WebAssembly.instantiate(r, { env: { thunk, add } }))
+        .then(r => run('raw', r.instance.exports));
+
+      // stdweb
+      Rust.bm_stdweb.then(r => {
+        run('stdweb', r);
+      });
+
+      function run(name, f) {
+        const cheap = [1000000, 10000000, 100000000];
+        if (f.thunk) {
+          const g = f.thunk;
+          for (const n of cheap) {
+            update(name, `JS->Wasm Thunk (${n})`, `js-wasm-thunk-${n}`, () => {
+              const now = performance.now();
+              for (let i = 0; i < n; i++)
+                g();
+              return performance.now() - now;
+            });
+          }
+        }
+
+        if (f.call_js_thunk_n_times) {
+          const g = f.call_js_thunk_n_times;
+          for (const n of cheap) {
+            update(name, `Wasm->JS Thunk (${n})`, `wasm-js-thunk-${n}`, () => {
+              const now = performance.now();
+              g(n);
+              return performance.now() - now;
+            });
+          }
+        }
+
+        if (f.add) {
+          const g = f.add;
+          for (const n of cheap) {
+            update(name, `JS->Wasm Add (${n})`, `js-wasm-add-${n}`, () => {
+              const now = performance.now();
+              for (let i = 0; i < n; i++)
+                g();
+              return performance.now() - now;
+            });
+          }
+        }
+
+        if (f.call_js_add_n_times) {
+          const g = f.call_js_add_n_times;
+          for (const n of cheap) {
+            update(name, `Wasm->JS Add (${n})`, `wasm-js-add-${n}`, () => {
+              const now = performance.now();
+              g(n);
+              return performance.now() - now;
+            });
+          }
+        }
+      }
+
+      function update(name, title, id, f) {
+        let row = document.getElementById(id);
+        if (row === null) {
+          const table = document.getElementById('table');
+          const node = document.createElement('tr');
+          node.id = id;
+          node.innerHTML = `
+            <td>${title}</td>
+            <td class='raw'></td>
+            <td class='wasm-bindgen'></td>
+            <td class='stdweb'></td>
+          `;
+          document.getElementById('table').appendChild(node);
+          row = node;
+        }
+        const element = row.querySelector(`.${name}`);
+        const y = [title, name];
+        element.innerText = 'running ...';
+        element.wut = y;
+        setTimeout(() => {
+          let val;
+          try {
+            val = `${Math.round(f())}ms`;
+          } catch(e) {
+            val = 'N/A (failed)';
+          }
+          element.innerText = val;
+        }, 1);
+      }
+    </script>
+
+    <h3>Tests run</h3>
+    <ul>
+      <li>
+        <strong>Thunk</strong> - tests that time how long it takes to
+        call a wasm function which calls a noop imported JS function N times
+      </li>
+    </ul>
+    <table id='table'>
+      <tr>
+        <td><strong>Test</strong></td>
+        <td><strong>raw <code>*.wast</code></strong></td>
+        <td><strong>wasm-bindgen</strong></td>
+        <td><strong>stdweb</strong></td>
+      </tr>
+    </table>
+  </body>
+</html>
