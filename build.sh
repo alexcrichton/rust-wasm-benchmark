@@ -7,18 +7,18 @@ cargo build --manifest-path wasm-bindgen/Cargo.toml \
   --target wasm32-unknown-unknown \
   --release
 
-rm -rf dist
-mkdir -p dist
+rm -rf docs
+mkdir -p docs
 wasm-bindgen target/wasm32-unknown-unknown/release/wasm_bindgen.wasm \
-  --out-dir dist \
+  --out-dir docs \
   --no-modules
 
 # raw wasm
-wat2wasm ./raw-wasm/raw.wast -o dist/raw.wasm
+wat2wasm ./raw-wasm/raw.wast -o docs/raw.wasm
 
 # stdweb
 (cd stdweb && cargo web build --target=wasm32-unknown-unknown --release)
-cp target/wasm32-unknown-unknown/release/bm_stdweb.js dist/
-cp target/wasm32-unknown-unknown/release/bm_stdweb.wasm dist/
+cp target/wasm32-unknown-unknown/release/bm_stdweb.js docs/
+cp target/wasm32-unknown-unknown/release/bm_stdweb.wasm docs/
 
-ln -nsf ../index.html dist/index.html
+ln index.html docs/index.html
