@@ -108,8 +108,29 @@
     <h3>Tests run</h3>
     <ul>
       <li>
-        <strong>Thunk</strong> - tests that time how long it takes to
-        call a wasm function which calls a noop imported JS function N times
+        <strong>Wasm->JS Thunk</strong> - tests that time how long it takes to
+        call a wasm function which calls a noop imported JS function N times.
+        This benchmarks the (theoretical) bare minimum overhead of calling an
+        imported JS function.
+      </li>
+      <li>
+        <strong>JS->Wasm Thunk</strong> - tests that time how long it takes JS to
+        call a wasm function that does nothing N times.  This benchmarks the
+        (theoretical) bare minimum overhead of calling an exported wasm
+        function.
+      </li>
+      <li>
+        <strong>Wasm->JS Add</strong> - like the above "thunk" test, but the JS
+        function performs and addition which is returned to Rust. This
+        benchmarks the minimum overhead of calling an
+        imported JS function with some simple arguments.
+      </li>
+      <li>
+        <strong>JS->Wasm Add</strong> - like the above "thunk" test but the wasm
+        function does some work by adding two arguments. This benchmarks the
+        minimum overhead of calling an imported JS function with some simple
+        arguments.
+      </li>
       </li>
     </ul>
     <table id='table'>
