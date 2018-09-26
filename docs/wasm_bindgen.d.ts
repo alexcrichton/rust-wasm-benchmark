@@ -7,3 +7,7 @@ export function thunk(): void;
 
 export function add(arg0: number, arg1: number): number;
 
+export function fibonacci(arg0: number): number;
+
+export function fibonacci_high(): number;
+

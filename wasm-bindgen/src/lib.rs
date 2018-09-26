@@ -31,3 +31,23 @@ pub fn thunk() {}
 pub fn add(a: i32, b: i32) -> i32 {
     a + b
 }
+
+static mut FIB_HIGH: i32 = 0;
+
+#[wasm_bindgen]
+pub fn fibonacci(n: i32) -> i32 {
+    let mut a = 1u64;
+    let mut b = 1;
+    for _ in 0..n {
+        let tmp = b;
+        b += a;
+        a = tmp;
+    }
+    unsafe { FIB_HIGH = (a >> 32) as i32; }
+    return a as i32
+}
+
+#[wasm_bindgen]
+pub fn fibonacci_high() -> i32 {
+    unsafe { FIB_HIGH }
+}

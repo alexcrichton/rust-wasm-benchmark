@@ -3,3 +3,6 @@ members = [
   'wasm-bindgen',
   'stdweb',
 ]
+
+[patch.crates-io]
+wasm-bindgen = { git = 'https://github.com/alexcrichton/wasm-bindgen', branch = 'inline-unit' }
