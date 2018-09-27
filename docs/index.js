@@ -2,6 +2,9 @@ const suites = [];
 const colors = ['blue', 'green', 'red', 'orange']
 const charts = {};
 
+// js, baseline
+suites.push(['js', jsBenchmarks]);
+
 // wasm-bindgen tests
 wasm_bindgen('./wasm_bindgen_bg.wasm').then(() => {
   suites.push(['wasm_bindgen', wasm_bindgen]);
@@ -20,9 +23,6 @@ fetch('./raw.wasm')
 // Rust.bm_stdweb.then(r => {
 //   suites.push(['stdweb', r]);
 // });
-
-// js
-suites.push(['js', jsBenchmarks]);
 
 window.onload = function() {
   for (const test of document.querySelectorAll('.test')) {
@@ -63,19 +63,32 @@ async function runtest(id) {
     },
     options: {
       animation: {
-	duration: 0, // general animation time
+	duration: 0,
       },
       hover: {
-	animationDuration: 0, // duration of animations when hovering an item
+	animationDuration: 0,
       },
-      responsiveAnimationDuration: 0, // animation duration after a resize
-      // scales: {
-      //   yAxes: [{
-      //     scaleLabel: {
-      //       labelString: 'time (ms)'
-      //     },
-      //   }]
-      // }
+      responsiveAnimationDuration: 0,
+      tooltips: {
+        intersect: false,
+        mode: 'index',
+      },
+      scales: {
+        xAxes: [{
+          display: true,
+          scaleLabel: {
+            display: true,
+            labelString: 'Iterations',
+          }
+        }],
+        yAxes: [{
+          display: true,
+          scaleLabel: {
+            display: true,
+            labelString: 'time (ms)'
+          },
+        }],
+      },
     }
   });
 
@@ -95,20 +108,29 @@ async function run(chart, id, labels, datasets) {
   let remaining = 6;
   let cur = 0;
   chart.pows = [];
+  chart.rawDurs = [];
   const update = new Update(chart);
+
+  for (let i = 0; i < datasets.length; i++)
+    chart.rawDurs.push([]);
 
   for (let pow = 4; remaining > 0; pow++) {
     labels.push(`2^${pow}`);
-    for (let i = 0; i < suites.length; i++)
-      datasets[i].data.push(0);
+    for (let i = 0; i < suites.length; i++) {
+      chart.rawDurs[i].push(0);
+      chart.data.datasets[i].data.push(0);
+    }
     chart.pows.push(pow);
     if (!measure(update, id, 1 << pow, datasets, cur)) {
       labels.pop();
-      for (let i = 0; i < suites.length; i++)
-        datasets[i].data.pop();
+      for (let i = 0; i < suites.length; i++) {
+        chart.rawDurs[i].pop();
+        chart.data.datasets[i].data.pop();
+      }
       chart.pows.pop(pow);
       continue;
     }
+
     remaining -= 1;
     cur += 1;
     update.update();
@@ -129,6 +151,7 @@ async function moretest(id) {
     chart.data.labels.push(0);
     for (let k = 0; k < chart.data.datasets.length; k++) {
       chart.data.datasets[k].data.push(0);
+      chart.rawDurs[k].push(0);
     }
     for (let j = chart.data.labels.length - 1; j > i; j--) {
       chart.data.labels[j] = chart.data.labels[j - 1];
@@ -136,12 +159,15 @@ async function moretest(id) {
       for (let k = 0; k < chart.data.datasets.length; k++) {
         chart.data.datasets[k].data[j] =
           chart.data.datasets[k].data[j - 1];
+        chart.rawDurs[k][j] = chart.rawDurs[k][j - 1];
       }
     }
     chart.data.labels[i + 1] = `2^${mid}`;
     chart.pows[i + 1] = mid;
-    for (let k = 0; k < chart.data.datasets.length; k++)
+    for (let k = 0; k < chart.data.datasets.length; k++) {
       chart.data.datasets[k].data[i + 1] = 0;
+      chart.rawDurs[k][i + 1] = 0;
+    }
     measure(update, id, Math.round(Math.pow(2, mid)), chart.data.datasets, i + 1);
 
     update.maybeUpdate();
@@ -198,21 +224,27 @@ function measure(update, id, iters, datasets, idx) {
     }
     ran = true;
 
-    let min = datasets[i].data[idx];
+    let min = update.chart.rawDurs[i][idx];
     for (let j = 0; j < 4; j++) {
       const now = performance.now();
       bm(iters);
       const dur = performance.now() - now;
       if (dur < min || min == 0) {
         min = dur;
-        datasets[i].data[idx] = min;
-        update.maybeUpdate();
+        update.chart.rawDurs[i][idx] = min;
       }
       if (min > 100)
         break;
     }
     if (min > 5)
       valid = true;
+  }
+
+  for (let i = 0; i < suites.length; i++) {
+    const sample = update.chart.rawDurs[i][idx];
+    const baseline = update.chart.rawDurs[0][idx];
+    update.chart.data.datasets[i].data[idx] = sample / baseline;
+    update.maybeUpdate();
   }
 
   if (!ran)
