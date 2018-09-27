@@ -25,3 +25,4 @@ cp benchmark.js docs/
 
 ln index.html docs/index.html
 ln index.js docs/index.js
+ln Chart.min.js docs/Chart.min.js

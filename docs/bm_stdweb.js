@@ -499,11 +499,11 @@ Module.STDWEB_PRIVATE.acquire_tmp = function( dummy ) {
             "__extjs_db0226ae1bbecd407e9880ee28ddc70fc3322d9c": function($0) {
                 $0 = Module.STDWEB_PRIVATE.to_js($0);Module.STDWEB_PRIVATE.unregister_raw_value (($0));
             },
-            "__extjs_df70ef3cbde0142e7191aa54dd945259460d2d40": function($0, $1, $2) {
-                $1 = Module.STDWEB_PRIVATE.to_js($1);$2 = Module.STDWEB_PRIVATE.to_js($2);Module.STDWEB_PRIVATE.from_js($0, (function(){add (($1), ($2))})());
-            },
             "__extjs_87524f8bf9e0a81e102a92a32803f666f1328f42": function($0) {
                 Module.STDWEB_PRIVATE.from_js($0, (function(){thunk ();})());
+            },
+            "__extjs_df70ef3cbde0142e7191aa54dd945259460d2d40": function($0, $1, $2) {
+                $1 = Module.STDWEB_PRIVATE.to_js($1);$2 = Module.STDWEB_PRIVATE.to_js($2);Module.STDWEB_PRIVATE.from_js($0, (function(){add (($1), ($2))})());
             },
                 "__web_on_grow": __web_on_grow
             }
@@ -528,6 +528,14 @@ Module.STDWEB_PRIVATE.acquire_tmp = function( dummy ) {
 ;
                 Module.exports.add = function add(a, b) {
     return Module.instance.exports.add(a, b);
+}
+;
+                Module.exports.fibonacci = function fibonacci(n) {
+    return Module.instance.exports.fibonacci(n);
+}
+;
+                Module.exports.fibonacci_high = function fibonacci_high() {
+    return Module.instance.exports.fibonacci_high();
 }
 ;
             __web_on_grow();

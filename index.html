@@ -1,6 +1,9 @@
 <html>
   <head>
     <meta content="text/html;charset=utf-8" http-equiv="Content-Type"/>
+    <style>
+      .more { display: none; }
+    </style>
   </head>
   <body>
     <script>
@@ -8,7 +11,7 @@
       window.add = function(a, b) { return a + b; };
       delete WebAssembly.instantiateStreaming;
     </script>
-    <script src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.min.js'></script>
+    <script src='Chart.min.js'></script>
     <script src='wasm_bindgen.js'></script>
     <script src='bm_stdweb.js'></script>
     <script src='benchmark.js'></script>
@@ -20,37 +23,46 @@
     <ul>
       <li class='test' id='thunk'>
         <strong>Call one function</strong> - a benchmark timing how long it
-        takes to call a "thunk", a function that does nothing, and then return.
+        takes for the calling context to call a "thunk", a function that does
+        nothing, and then return. The y axis is how long it takes to call the
+        thunk N times.
 
         <a href='#' class='run'>Run test</a>
+        <a href='#' class='more'>Fill Gaps</a>
       </li>
-      <!-- <li> -->
-      <!--   <strong>JS&#45;>Wasm Thunk</strong> &#45; tests that time how long it takes JS to -->
-      <!--   call a wasm function that does nothing N times.  This benchmarks the -->
-      <!--   (theoretical) bare minimum overhead of calling an exported wasm -->
-      <!--   function. -->
-      <!-- </li> -->
-      <!-- <li> -->
-      <!--   <strong>Wasm&#45;>JS Add</strong> &#45; like the above "thunk" test, but the JS -->
-      <!--   function performs and addition which is returned to Rust. This -->
-      <!--   benchmarks the minimum overhead of calling an -->
-      <!--   imported JS function with some simple arguments. -->
-      <!-- </li> -->
-      <!-- <li> -->
-      <!--   <strong>JS&#45;>Wasm Add</strong> &#45; like the above "thunk" test but the wasm -->
-      <!--   function does some work by adding two arguments. This benchmarks the -->
-      <!--   minimum overhead of calling an imported JS function with some simple -->
-      <!--   arguments. -->
-      <!-- </li> -->
+      <li class='test' id='add'>
+        <strong>Add two numbers</strong> - similar to "call one function" above,
+        except this time the function we call simply adds its two arguments and
+        then returns the result.
+
+        <a href='#' class='run'>Run test</a>
+        <a href='#' class='more'>Fill Gaps</a>
+      </li>
+      <li class='test' id='call_js_thunk_n_times'>
+        <strong>Call JS function</strong> - this benchmark times how long it
+        takes a body of code to call out to JS, N times. Each benchmark will run
+        once, and internally it will call a JS "thunk" (a function that does
+        nothing) N times, timing how long it takes.
+
+        <a href='#' class='run'>Run test</a>
+        <a href='#' class='more'>Fill Gaps</a>
+      </li>
+      <li class='test' id='call_js_add_n_times'>
+        <strong>Call JS Add</strong> - same as the above JS function benchmark,
+        except the function we're calling in JS adds two numbers and returns the
+        result.
+
+        <a href='#' class='run'>Run test</a>
+        <a href='#' class='more'>Fill Gaps</a>
+      </li>
+      <li class='test' id='fibonacci'>
+        <strong>Calculate Fib(40)</strong> - calculates the 40th fibonacci
+        number N times, measuring how long it takes
+
+        <a href='#' class='run'>Run test</a>
+        <a href='#' class='more'>Fill Gaps</a>
+      </li>
     </ul>
-    <!-- <table id='table'> -->
-    <!--   <tr> -->
-    <!--     <td><strong>Test</strong></td> -->
-    <!--     <td><strong>raw <code>*.wast</code></strong></td> -->
-    <!--     <td><strong>wasm&#45;bindgen</strong></td> -->
-    <!--     <td><strong>stdweb</strong></td> -->
-    <!--     <td><strong>JS</strong></td> -->
-    <!--   </tr> -->
     </table>
   </body>
 </html>

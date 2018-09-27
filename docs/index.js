@@ -1,5 +1,6 @@
 const suites = [];
 const colors = ['blue', 'green', 'red', 'orange']
+const charts = {};
 
 // wasm-bindgen tests
 wasm_bindgen('./wasm_bindgen_bg.wasm').then(() => {
@@ -14,10 +15,11 @@ fetch('./raw.wasm')
     suites.push(['raw', r.instance.exports]);
   });
 
-// stdweb
-Rust.bm_stdweb.then(r => {
-  suites.push(['stdweb', r]);
-});
+// stdweb, currently very slow on these benchmarks and skews the apparent
+// results
+// Rust.bm_stdweb.then(r => {
+//   suites.push(['stdweb', r]);
+// });
 
 // js
 suites.push(['js', jsBenchmarks]);
@@ -30,10 +32,15 @@ window.onload = function() {
       link.parentNode.removeChild(link);
       return false;
     };
+
+    test.querySelector('.more').onclick = function() {
+      moretest(test.id);
+      return false;
+    };
   }
 };
 
-function runtest(id) {
+async function runtest(id) {
   const canvas = document.createElement('canvas');
   const container = document.getElementById(id);
   container.appendChild(canvas);
@@ -55,144 +62,177 @@ function runtest(id) {
       datasets,
     },
     options: {
-      scales: {
-        yAxes: [{
-          scaleLabel: 'time (ms)'
-        }]
-      }
+      animation: {
+	duration: 0, // general animation time
+      },
+      hover: {
+	animationDuration: 0, // duration of animations when hovering an item
+      },
+      responsiveAnimationDuration: 0, // animation duration after a resize
+      // scales: {
+      //   yAxes: [{
+      //     scaleLabel: {
+      //       labelString: 'time (ms)'
+      //     },
+      //   }]
+      // }
     }
   });
 
-  run(id, labels, datasets);
-  myLineChart.update();
-  window.chart = myLineChart;
+  await run(myLineChart, id, labels, datasets);
 
+  document.querySelector(`#${id} .more`).style.display = 'inline-block';
+  charts[id] = myLineChart;
+
+  canvas.onclick = function(e) {
+    for (const element of myLineChart.getElementAtEvent(e))
+      remeasure(id, myLineChart, element);
+    return false;
+  };
 }
 
-function run(id, labels, datasets) {
-  let remaining = 5;
+async function run(chart, id, labels, datasets) {
+  let remaining = 6;
+  let cur = 0;
+  chart.pows = [];
+  const update = new Update(chart);
 
   for (let pow = 4; remaining > 0; pow++) {
-    const iters = 1 << pow;
-    const data = [];
-    for (const suite of suites) {
-      const f = suite[1][id];
-      if (f === undefined)
-        continue;
-
-      const now = performance.now();
-      for (let n = 0; n < iters; n++)
-        f();
-      const dur = performance.now() - now;
-      data.push(dur);
-    }
-    if (data.length == 0)
-      throw new Error('wut');
-
-    let discard = true;
-    for (const dur of data) {
-      if (dur > 5) {
-        discard = false;
-      }
-    }
-    if (discard)
-      continue;
-
     labels.push(`2^${pow}`);
-    for (let i = 0; i < data.length; i++) {
-      datasets[i].data.push(data[i]);
+    for (let i = 0; i < suites.length; i++)
+      datasets[i].data.push(0);
+    chart.pows.push(pow);
+    if (!measure(update, id, 1 << pow, datasets, cur)) {
+      labels.pop();
+      for (let i = 0; i < suites.length; i++)
+        datasets[i].data.pop();
+      chart.pows.pop(pow);
+      continue;
     }
     remaining -= 1;
+    cur += 1;
+    update.update();
+    await waitForATinyBit();
   }
 }
 
-// function run(name, f) {
-//   const cheap = [1000000, 10000000#<{(|, 100000000|)}>#];
-//   if (f.thunk) {
-//     const g = f.thunk;
-//     for (const n of cheap) {
-//       update(name, `JS->Wasm Thunk (${n})`, `js-wasm-thunk-${n}`, () => {
-//         const now = performance.now();
-//         for (let i = 0; i < n; i++)
-//           g();
-//         return performance.now() - now;
-//       });
-//     }
-//   }
-//
-//   if (f.call_js_thunk_n_times) {
-//     const g = f.call_js_thunk_n_times;
-//     for (const n of cheap) {
-//       update(name, `Wasm->JS Thunk (${n})`, `wasm-js-thunk-${n}`, () => {
-//         const now = performance.now();
-//         g(n);
-//         return performance.now() - now;
-//       });
-//     }
-//   }
-//
-//   if (f.add) {
-//     const g = f.add;
-//     for (const n of cheap) {
-//       update(name, `JS->Wasm Add (${n})`, `js-wasm-add-${n}`, () => {
-//         const now = performance.now();
-//         for (let i = 0; i < n; i++)
-//           g();
-//         return performance.now() - now;
-//       });
-//     }
-//   }
-//
-//   if (f.call_js_add_n_times) {
-//     const g = f.call_js_add_n_times;
-//     for (const n of cheap) {
-//       update(name, `Wasm->JS Add (${n})`, `wasm-js-add-${n}`, () => {
-//         const now = performance.now();
-//         g(n, 1, 2);
-//         return performance.now() - now;
-//       });
-//     }
-//   }
-//
-//   if (f.fibonacci) {
-//     const g = f.fibonacci;
-//     for (const n of [100000000]) {
-//       update(name, `Fibonacci(40) (${n})`, `fib-${n}`, () => {
-//         const now = performance.now();
-//         g(80);
-//         return performance.now() - now;
-//       });
-//     }
-//   }
-// }
-//
-// function update(name, title, id, f) {
-//   let row = document.getElementById(id);
-//   if (row === null) {
-//     const table = document.getElementById('table');
-//     const node = document.createElement('tr');
-//     node.id = id;
-//     node.innerHTML = `
-//       <td>${title}</td>
-//       <td class='raw'></td>
-//       <td class='wasm-bindgen'></td>
-//       <td class='stdweb'></td>
-//       <td class='js'></td>
-//       `;
-//     document.getElementById('table').appendChild(node);
-//     row = node;
-//   }
-//   const element = row.querySelector(`.${name}`);
-//   const y = [title, name];
-//   element.innerText = 'running ...';
-//   element.wut = y;
-//   setTimeout(() => {
-//     let val;
-//     try {
-//       val = `${Math.round(f())}ms`;
-//     } catch(e) {
-//       val = 'N/A (failed)';
-//     }
-//     element.innerText = val;
-//   }, 1);
-// }
+async function moretest(id) {
+  const chart = charts[id];
+  const update = new Update(chart);
+
+  for (let i = chart.pows.length - 2; i >= 0; i--) {
+    const left = chart.pows[i];
+    const right = chart.pows[i + 1];
+    const mid = (left + right) / 2;
+    const iters = Math.pow(2, mid);
+
+    chart.data.labels.push(0);
+    for (let k = 0; k < chart.data.datasets.length; k++) {
+      chart.data.datasets[k].data.push(0);
+    }
+    for (let j = chart.data.labels.length - 1; j > i; j--) {
+      chart.data.labels[j] = chart.data.labels[j - 1];
+      chart.pows[j] = chart.pows[j - 1];
+      for (let k = 0; k < chart.data.datasets.length; k++) {
+        chart.data.datasets[k].data[j] =
+          chart.data.datasets[k].data[j - 1];
+      }
+    }
+    chart.data.labels[i + 1] = `2^${mid}`;
+    chart.pows[i + 1] = mid;
+    for (let k = 0; k < chart.data.datasets.length; k++)
+      chart.data.datasets[k].data[i + 1] = 0;
+    measure(update, id, Math.round(Math.pow(2, mid)), chart.data.datasets, i + 1);
+
+    update.maybeUpdate();
+    await waitForATinyBit();
+  }
+  update.update();
+}
+
+async function remeasure(id, chart, event) {
+  await waitForATinyBit();
+  const pow = chart.pows[event._index];
+  const update = new Update(chart);
+  measure(update, id, Math.floor(Math.pow(2, pow)), chart.data.datasets, event._index);
+  update.update();
+}
+
+function waitForATinyBit() {
+  return new Promise((resolve, reject) => setTimeout(resolve, 1));
+}
+
+function measure(update, id, iters, datasets, idx) {
+  let valid = false;
+  let ran = false;
+
+  for (let i = 0; i < suites.length; i++) {
+    const f = suites[i][1][id];
+    if (f === undefined)
+      continue;
+    let bm = null;
+    switch(id) {
+      case 'thunk':
+      case 'add':
+        bm = n => {
+          for (let i = 0; i < n; i++) {
+            f();
+          }
+        };
+        break;
+      case 'call_js_thunk_n_times':
+        bm = f;
+        break;
+      case 'call_js_add_n_times':
+        bm = n => f(n, 1, 2);
+        break;
+      case 'fibonacci':
+        bm = n => {
+          for (let i = 0; i < n; i++) {
+            f(40);
+          }
+        };
+        break;
+      default:
+        throw new Error(`unknown benchmark id ${id}`)
+    }
+    ran = true;
+
+    let min = datasets[i].data[idx];
+    for (let j = 0; j < 4; j++) {
+      const now = performance.now();
+      bm(iters);
+      const dur = performance.now() - now;
+      if (dur < min || min == 0) {
+        min = dur;
+        datasets[i].data[idx] = min;
+        update.maybeUpdate();
+      }
+      if (min > 100)
+        break;
+    }
+    if (min > 5)
+      valid = true;
+  }
+
+  if (!ran)
+    throw new Error('invalid dataset');
+  return valid;
+}
+
+class Update {
+  constructor(chart) {
+    this.chart = chart;
+    this.tick = performance.now();
+  }
+
+  update() {
+    this.chart.update();
+    this.tick = performance.now();
+  }
+
+  maybeUpdate() {
+    if (performance.now() - this.tick >= 100)
+      this.update();
+  }
+}
