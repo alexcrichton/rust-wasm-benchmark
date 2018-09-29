@@ -1,13 +1,52 @@
 const suites = [];
 const colors = ['blue', 'green', 'red', 'orange']
-const charts = {};
+const NSUITES = 3;
+let suites_left = NSUITES;
+
+const labels = [];
+const datasets = [];
+let chart = null;
+let update = null;
+
+function suite(name, functions) {
+  const bms = {};
+
+  const process = (name, factory) => {
+    if (typeof functions[name] === 'function')
+      bms[name] = factory(functions[name]);
+  };
+
+  const run_a_bunch = f => {
+    return n => {
+      for (let i = 0; i < n; i++)
+        f();
+    }
+  };
+
+  process('thunk', run_a_bunch);
+  process('add', run_a_bunch);
+  process('call_js_thunk_n_times', f => f);
+  process('call_js_add_n_times', f => n => f(n, 1, 2));
+  process('fibonacci', f => {
+    return n => {
+      for (let i = 0; i < n; i++) {
+        f(40);
+      }
+    }
+  });
+
+  suites.push([name, bms]);
+  suites_left--;
+  if (suites_left === 0)
+    load_chart();
+}
 
 // js, baseline
-suites.push(['js', jsBenchmarks]);
+suite('js', jsBenchmarks);
 
 // wasm-bindgen tests
 wasm_bindgen('./wasm_bindgen_bg.wasm').then(() => {
-  suites.push(['wasm_bindgen', wasm_bindgen]);
+  suite('wasm_bindgen', wasm_bindgen);
 });
 
 // raw tests
@@ -15,7 +54,7 @@ fetch('./raw.wasm')
   .then(r => r.arrayBuffer())
   .then(r => WebAssembly.instantiate(r, { env: { thunk, add } }))
   .then(r => {
-    suites.push(['raw', r.instance.exports]);
+    suite('raw', r.instance.exports);
   });
 
 // stdweb, currently very slow on these benchmarks and skews the apparent
@@ -24,156 +63,84 @@ fetch('./raw.wasm')
 //   suites.push(['stdweb', r]);
 // });
 
-window.onload = function() {
-  for (const test of document.querySelectorAll('.test')) {
-    const link = test.querySelector('.run');
-    link.onclick = function() {
-      runtest(test.id);
-      link.parentNode.removeChild(link);
-      return false;
-    };
-
-    test.querySelector('.more').onclick = function() {
-      moretest(test.id);
-      return false;
-    };
-  }
-};
-
-async function runtest(id) {
-  const canvas = document.createElement('canvas');
-  const container = document.getElementById(id);
-  container.appendChild(canvas);
-
-  const labels = [];
-  const datasets = [];
-  for (let i = 0; i < suites.length; i++) {
+function load_chart() {
+  const canvas = document.getElementById('canvas');
+  for (let i = 0; i < NSUITES; i++) {
     const dataset = {
       label: suites[i][0],
-      borderColor: colors[i],
-      fill: false,
+      backgroundColor: colors[i],
     };
     datasets.push(dataset);
   }
-  var myLineChart = new Chart(canvas, {
-    type: 'line',
-    data: {
-      labels: labels,
-      datasets,
-    },
+  chart = new Chart(canvas, {
+    type: 'bar',
+    data: { labels, datasets },
     options: {
-      animation: {
-	duration: 0,
-      },
-      hover: {
-	animationDuration: 0,
-      },
+      animation: { duration: 0 },
+      hover: { animationDuration: 0 },
       responsiveAnimationDuration: 0,
       tooltips: {
-        intersect: false,
-        mode: 'index',
+        // intersect: false,
+        mode: 'nearest',
+        callbacks: {
+          label: function(item, data) {
+            if (item.datasetIndex == 0) {
+              return 'baseline';
+            }
+            console.log(item, data);
+            const val = data.datasets[item.datasetIndex].data[item.index];
+            console.log(val);
+            return `${Math.round(val * 100) / 100}% of JS`;
+          }
+        }
       },
       scales: {
-        xAxes: [{
-          display: true,
-          scaleLabel: {
-            display: true,
-            labelString: 'Iterations',
-          }
-        }],
         yAxes: [{
           display: true,
           scaleLabel: {
             display: true,
-            labelString: 'time (ms)'
+            labelString: 'percentage speedup/slowdown relative to JS (lower is better)'
           },
         }],
       },
     }
   });
-
-  await run(myLineChart, id, labels, datasets);
-
-  document.querySelector(`#${id} .more`).style.display = 'inline-block';
-  charts[id] = myLineChart;
-
-  canvas.onclick = function(e) {
-    for (const element of myLineChart.getElementAtEvent(e))
-      remeasure(id, myLineChart, element);
-    return false;
-  };
-}
-
-async function run(chart, id, labels, datasets) {
-  let remaining = 6;
-  let cur = 0;
-  chart.pows = [];
-  chart.rawDurs = [];
-  const update = new Update(chart);
-
-  for (let i = 0; i < datasets.length; i++)
-    chart.rawDurs.push([]);
-
-  for (let pow = 4; remaining > 0; pow++) {
-    labels.push(`2^${pow}`);
-    for (let i = 0; i < suites.length; i++) {
-      chart.rawDurs[i].push(0);
-      chart.data.datasets[i].data.push(0);
-    }
-    chart.pows.push(pow);
-    if (!measure(update, id, 1 << pow, datasets, cur)) {
-      labels.pop();
-      for (let i = 0; i < suites.length; i++) {
-        chart.rawDurs[i].pop();
-        chart.data.datasets[i].data.pop();
-      }
-      chart.pows.pop(pow);
-      continue;
-    }
-
-    remaining -= 1;
-    cur += 1;
-    update.update();
-    await waitForATinyBit();
+  update = new Update(chart);
+  for (const test of document.querySelectorAll('.test')) {
+    const link = test.querySelector('.run');
+    link.onclick = function() {
+      run(test.id)
+        .catch(console.error);
+      link.parentNode.removeChild(link);
+      return false;
+    };
+    link.style.display = 'inline-block';
   }
 }
 
-async function moretest(id) {
-  const chart = charts[id];
-  const update = new Update(chart);
+async function run(id) {
+  labels.push(`test: ${id}`);
 
-  for (let i = chart.pows.length - 2; i >= 0; i--) {
-    const left = chart.pows[i];
-    const right = chart.pows[i + 1];
-    const mid = (left + right) / 2;
-    const iters = Math.pow(2, mid);
+  const iters = await selectIters(id);
+  await waitForATinyBit();
+  const data = await measure(id, iters, []);
 
-    chart.data.labels.push(0);
-    for (let k = 0; k < chart.data.datasets.length; k++) {
-      chart.data.datasets[k].data.push(0);
-      chart.rawDurs[k].push(0);
-    }
-    for (let j = chart.data.labels.length - 1; j > i; j--) {
-      chart.data.labels[j] = chart.data.labels[j - 1];
-      chart.pows[j] = chart.pows[j - 1];
-      for (let k = 0; k < chart.data.datasets.length; k++) {
-        chart.data.datasets[k].data[j] =
-          chart.data.datasets[k].data[j - 1];
-        chart.rawDurs[k][j] = chart.rawDurs[k][j - 1];
-      }
-    }
-    chart.data.labels[i + 1] = `2^${mid}`;
-    chart.pows[i + 1] = mid;
-    for (let k = 0; k < chart.data.datasets.length; k++) {
-      chart.data.datasets[k].data[i + 1] = 0;
-      chart.rawDurs[k][i + 1] = 0;
-    }
-    measure(update, id, Math.round(Math.pow(2, mid)), chart.data.datasets, i + 1);
-
-    update.maybeUpdate();
-    await waitForATinyBit();
+  for (let i = 0; i < NSUITES; i++) {
+    datasets[i].data.push((data[i] / data[0]) * 100);
   }
+
   update.update();
+}
+
+async function selectIters(id) {
+  let iters = 4;
+  for (; true; iters *= 2) {
+    const data = await measure(id, iters, []);
+    for (let i = 0; i < NSUITES; i++)
+      if (data[i] && data[i] > 5)
+        return iters * 50;
+    await waitForATinyBit();
+  }
 }
 
 async function remeasure(id, chart, event) {
@@ -188,70 +155,40 @@ function waitForATinyBit() {
   return new Promise((resolve, reject) => setTimeout(resolve, 1));
 }
 
-function measure(update, id, iters, datasets, idx) {
-  let valid = false;
+async function measure(id, iters, prev) {
   let ran = false;
 
+  const data = [];
   for (let i = 0; i < suites.length; i++) {
-    const f = suites[i][1][id];
-    if (f === undefined)
-      continue;
-    let bm = null;
-    switch(id) {
-      case 'thunk':
-      case 'add':
-        bm = n => {
-          for (let i = 0; i < n; i++) {
-            f();
-          }
-        };
-        break;
-      case 'call_js_thunk_n_times':
-        bm = f;
-        break;
-      case 'call_js_add_n_times':
-        bm = n => f(n, 1, 2);
-        break;
-      case 'fibonacci':
-        bm = n => {
-          for (let i = 0; i < n; i++) {
-            f(40);
-          }
-        };
-        break;
-      default:
-        throw new Error(`unknown benchmark id ${id}`)
-    }
-    ran = true;
-
-    let min = update.chart.rawDurs[i][idx];
-    for (let j = 0; j < 4; j++) {
-      const now = performance.now();
-      bm(iters);
-      const dur = performance.now() - now;
-      if (dur < min || min == 0) {
-        min = dur;
-        update.chart.rawDurs[i][idx] = min;
-      }
-      if (min > 100)
-        break;
-    }
-    if (min > 5)
-      valid = true;
+    const val = await measureOne(id, i, iters, prev);
+    data.push(val);
+    ran = ran || val !== null;
   }
-
-  for (let i = 0; i < suites.length; i++) {
-    const sample = update.chart.rawDurs[i][idx];
-    const baseline = update.chart.rawDurs[0][idx];
-    update.chart.data.datasets[i].data[idx] = sample / baseline;
-    update.maybeUpdate();
-  }
-
   if (!ran)
     throw new Error('invalid dataset');
-  return valid;
+  return data;
 }
 
+async function measureOne(id, i, iters, prev) {
+  const bm = suites[i][1][id];
+  if (bm === undefined)
+    return null;
+
+  let min = prev[i] || 0;
+  for (let j = 0; j < 4; j++) {
+    const dur = measureOneIter(bm, iters);
+    await waitForATinyBit();
+    if (dur < min || min == 0)
+      min = dur;
+  }
+  return min;
+}
+
+function measureOneIter(bm, iters) {
+  const now = performance.now();
+  bm(iters);
+  return performance.now() - now;
+}
 class Update {
   constructor(chart) {
     this.chart = chart;

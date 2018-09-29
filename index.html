@@ -2,7 +2,7 @@
   <head>
     <meta content="text/html;charset=utf-8" http-equiv="Content-Type"/>
     <style>
-      .more { display: none; }
+      .test .run { display: none; }
     </style>
   </head>
   <body>
@@ -28,7 +28,6 @@
         thunk N times.
 
         <a href='#' class='run'>Run test</a>
-        <a href='#' class='more'>Fill Gaps</a>
       </li>
       <li class='test' id='add'>
         <strong>Add two numbers</strong> - similar to "call one function" above,
@@ -36,7 +35,6 @@
         then returns the result.
 
         <a href='#' class='run'>Run test</a>
-        <a href='#' class='more'>Fill Gaps</a>
       </li>
       <li class='test' id='call_js_thunk_n_times'>
         <strong>Call JS function</strong> - this benchmark times how long it
@@ -45,7 +43,6 @@
         nothing) N times, timing how long it takes.
 
         <a href='#' class='run'>Run test</a>
-        <a href='#' class='more'>Fill Gaps</a>
       </li>
       <li class='test' id='call_js_add_n_times'>
         <strong>Call JS Add</strong> - same as the above JS function benchmark,
@@ -53,16 +50,14 @@
         result.
 
         <a href='#' class='run'>Run test</a>
-        <a href='#' class='more'>Fill Gaps</a>
       </li>
       <li class='test' id='fibonacci'>
         <strong>Calculate Fib(40)</strong> - calculates the 40th fibonacci
         number N times, measuring how long it takes
 
         <a href='#' class='run'>Run test</a>
-        <a href='#' class='more'>Fill Gaps</a>
       </li>
     </ul>
-    </table>
+    <canvas id='canvas'></canvas>
   </body>
 </html>
