@@ -69,6 +69,7 @@ function load_chart() {
     const dataset = {
       label: suites[i][0],
       backgroundColor: colors[i],
+      rawData: [],
     };
     datasets.push(dataset);
   }
@@ -84,13 +85,12 @@ function load_chart() {
         mode: 'nearest',
         callbacks: {
           label: function(item, data) {
-            if (item.datasetIndex == 0) {
-              return 'baseline';
-            }
-            console.log(item, data);
             const val = data.datasets[item.datasetIndex].data[item.index];
-            console.log(val);
-            return `${Math.round(val * 100) / 100}% of JS`;
+            const [ms, iters] = data.datasets[item.datasetIndex].rawData[item.index];
+            if (item.datasetIndex == 0) {
+              return `baseline (${ms}ms for ${iters} iters)`;
+            }
+            return `${Math.round(val * 100) / 100}% of JS (${ms}ms for ${iters} iters)`;
           }
         }
       },
@@ -101,6 +101,7 @@ function load_chart() {
             display: true,
             labelString: 'percentage speedup/slowdown relative to JS (lower is better)'
           },
+          ticks: { min: 0 },
         }],
       },
     }
@@ -127,6 +128,7 @@ async function run(id) {
 
   for (let i = 0; i < NSUITES; i++) {
     datasets[i].data.push((data[i] / data[0]) * 100);
+    datasets[i].rawData.push([data[i], iters]);
   }
 
   update.update();
