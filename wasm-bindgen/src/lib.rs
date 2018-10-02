@@ -91,3 +91,27 @@ pub fn call_doesnt_throw_with_catch_n_times(n: usize) {
         }
     }
 }
+
+#[wasm_bindgen]
+extern {
+    pub type Element;
+
+    #[wasm_bindgen(method, js_name = firstChild, getter)]
+    fn first_child(this: &Element) -> Option<Element>;
+    #[wasm_bindgen(method, js_name = firstChild, structural, getter)]
+    fn first_child_structural(this: &Element) -> Option<Element>;
+}
+
+#[wasm_bindgen]
+pub fn call_first_child_n_times(n: usize, element: &Element) {
+    for _ in 0..n {
+        assert!(element.first_child().is_some());
+    }
+}
+
+#[wasm_bindgen]
+pub fn call_first_child_structural_n_times(n: usize, element: &Element) {
+    for _ in 0..n {
+        assert!(element.first_child_structural().is_some());
+    }
+}

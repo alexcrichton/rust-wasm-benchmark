@@ -178,6 +178,72 @@
         return wasm.call_doesnt_throw_with_catch_n_times(arg0);
     };
 
+    function GetOwnOrInheritedPropertyDescriptor(obj, id) {
+        while (obj) {
+            let desc = Object.getOwnPropertyDescriptor(obj, id);
+            if (desc) return desc;
+            obj = Object.getPrototypeOf(obj);
+        }
+        throw new Error(`descriptor for id='${id}' not found`);
+    }
+
+    const __wbg_firstChild_92c933dd471bfe72_target = GetOwnOrInheritedPropertyDescriptor(Element.prototype, 'firstChild').get || function() {
+        throw new Error(`wasm-bindgen: GetOwnOrInheritedPropertyDescriptor(Element.prototype, 'firstChild').get does not exist`);
+    };
+
+    function isLikeNone(x) {
+        return x === undefined || x === null;
+    }
+
+    __exports.__wbg_firstChild_92c933dd471bfe72 = function(arg0) {
+
+        const val = __wbg_firstChild_92c933dd471bfe72_target.call(getObject(arg0));
+        return isLikeNone(val) ? 0 : addHeapObject(val);
+
+    };
+
+    const __wbg_firstChild_8f6732445e048d50_target = function() {
+        return this.firstChild;
+    };
+
+    __exports.__wbg_firstChild_8f6732445e048d50 = function(arg0) {
+
+        const val = __wbg_firstChild_8f6732445e048d50_target.call(getObject(arg0));
+        return isLikeNone(val) ? 0 : addHeapObject(val);
+
+    };
+    /**
+    * @param {number} arg0
+    * @param {any} arg1
+    * @returns {void}
+    */
+    __exports.call_first_child_n_times = function(arg0, arg1) {
+        try {
+            return wasm.call_first_child_n_times(arg0, addBorrowedObject(arg1));
+
+        } finally {
+            stack.pop();
+
+        }
+
+    };
+
+    /**
+    * @param {number} arg0
+    * @param {any} arg1
+    * @returns {void}
+    */
+    __exports.call_first_child_structural_n_times = function(arg0, arg1) {
+        try {
+            return wasm.call_first_child_structural_n_times(arg0, addBorrowedObject(arg1));
+
+        } finally {
+            stack.pop();
+
+        }
+
+    };
+
     function dropRef(idx) {
 
         idx = idx >> 1;
@@ -191,6 +257,10 @@
         slab[idx] = slab_next;
         slab_next = idx;
     }
+
+    __exports.__wbindgen_object_drop_ref = function(i) {
+        dropRef(i);
+    };
 
     function takeObject(idx) {
         const ret = getObject(idx);

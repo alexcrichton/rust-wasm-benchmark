@@ -19,3 +19,7 @@ export function call_doesnt_throw_n_times(arg0: number): void;
 
 export function call_doesnt_throw_with_catch_n_times(arg0: number): void;
 
+export function call_first_child_n_times(arg0: number, arg1: any): void;
+
+export function call_first_child_structural_n_times(arg0: number, arg1: any): void;
+

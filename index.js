@@ -46,6 +46,12 @@ function suite(name, functions) {
     suites[0][1].call_js_catch_n_times = f3;
     const f4 = functions.call_doesnt_throw_with_catch_n_times;
     bms.call_js_catch_n_times = f4;
+
+    const element = document.body;
+    const f5 = functions.call_first_child_n_times;
+    suites[0][1].call_first_child_n_times = n => f5(n, element);
+    const f6 = functions.call_first_child_structural_n_times;
+    bms.call_first_child_n_times = n => f6(n, element);
   }
 
   suites.push([name, bms]);
