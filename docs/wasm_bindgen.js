@@ -39,7 +39,7 @@
     };
 
     __exports.__wbg_bar_869c64e188e8065e = function(arg0) {
-      getObject(arg0).bar();
+        __wbg_bar_869c64e188e8065e_target.call(getObject(arg0));
     };
 
     __exports.__wbg_doesntthrow_71d4a161d757b2ae = function() {
