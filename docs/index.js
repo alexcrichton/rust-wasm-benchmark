@@ -35,6 +35,19 @@ function suite(name, functions) {
     }
   });
 
+  if (name == 'wasm_bindgen') {
+    const foo = new Foo();
+    const f1 = functions.call_foo_bar_n_times;
+    suites[0][1].call_js_method_n_times = n => f1(n, foo);
+    const f2 = functions.call_foo_bar_structural_n_times;
+    bms.call_js_method_n_times = n => f2(n, foo);
+
+    const f3 = functions.call_doesnt_throw_n_times;
+    suites[0][1].call_js_catch_n_times = f3;
+    const f4 = functions.call_doesnt_throw_with_catch_n_times;
+    bms.call_js_catch_n_times = f4;
+  }
+
   suites.push([name, bms]);
   suites_left--;
   if (suites_left === 0)

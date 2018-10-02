@@ -8,6 +8,16 @@ extern {
     fn js_thunk();
     #[wasm_bindgen(js_name = add)]
     fn js_add(a: i32, b: i32) -> i32;
+
+    pub type Foo;
+    #[wasm_bindgen(method)]
+    fn bar(this: &Foo);
+    #[wasm_bindgen(method, structural, js_name = bar)]
+    fn bar_structural(this: &Foo);
+
+    fn doesnt_throw();
+    #[wasm_bindgen(catch, js_name = doesnt_throw)]
+    fn doesnt_throw_catch() -> Result<(), JsValue>;
 }
 
 #[wasm_bindgen]
@@ -50,4 +60,34 @@ pub fn fibonacci(n: i32) -> i32 {
 #[wasm_bindgen]
 pub fn fibonacci_high() -> i32 {
     unsafe { FIB_HIGH }
+}
+
+#[wasm_bindgen]
+pub fn call_foo_bar_n_times(n: usize, foo: &Foo) {
+    for _ in 0..n {
+        foo.bar();
+    }
+}
+
+#[wasm_bindgen]
+pub fn call_foo_bar_structural_n_times(n: usize, foo: &Foo) {
+    for _ in 0..n {
+        foo.bar_structural();
+    }
+}
+
+#[wasm_bindgen]
+pub fn call_doesnt_throw_n_times(n: usize) {
+    for _ in 0..n {
+        doesnt_throw();
+    }
+}
+
+#[wasm_bindgen]
+pub fn call_doesnt_throw_with_catch_n_times(n: usize) {
+    for _ in 0..n {
+        if let Err(e) = doesnt_throw_catch() {
+            wasm_bindgen::throw_val(e);
+        }
+    }
 }

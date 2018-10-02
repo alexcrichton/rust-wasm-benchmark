@@ -8,7 +8,11 @@
   <body>
     <script>
       window.thunk = function() {};
+      window.doesnt_throw = function() {};
       window.add = function(a, b) { return a + b; };
+      window.Foo = class {
+          bar() {}
+      };
       delete WebAssembly.instantiateStreaming;
     </script>
     <script src='Chart.min.js'></script>
@@ -54,6 +58,26 @@
       <li class='test' id='fibonacci'>
         <strong>Calculate Fib(40)</strong> - calculates the 40th fibonacci
         number N times, measuring how long it takes
+
+        <a href='#' class='run'>Run test</a>
+      </li>
+      <li class='test' id='call_js_method_n_times'>
+        <strong>`structural` vs not</strong> - this is a benchmark of the
+        <code>#[wasm_bindgen(structural)]</code> attribute and not. The baseline
+        bar (labeled as JS) represents a function call in wasm through the
+        prototype chain, using <code>Function.call</code> The wasm-bindgen bar
+        (the second one) is <code>structural</code>
+
+        <a href='#' class='run'>Run test</a>
+      </li>
+      <li class='test' id='call_js_catch_n_times'>
+        <strong><code>catch</code> vs not</strong> - this is a benchmark of the
+        <code>#[wasm_bindgen(catch)]</code> attribute and not. The baseline
+        bar (labeled as JS) represents a function call in wasm which does not
+        use <code>catch</code>. The second bar (labelled wasm-bindgen) is
+        calling a function in wasm-bindgen using <code>catch</code> but the
+        function doesn't actually throw. (same as baseline but catching an
+        exception if one happens to happen).
 
         <a href='#' class='run'>Run test</a>
       </li>
