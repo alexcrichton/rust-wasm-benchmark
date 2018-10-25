@@ -54,20 +54,20 @@ window.jsBenchmarks = {
   },
 
   count_node_types: e => {
-    const types = {};
+    const types = [];
 
     function count(node, types) {
       while(node) {
         const type = node.nodeType;
-        if (types[node])
-          types[type] += 1;
-        else
-          types[type] = 1;
+        while (types.length <= type)
+          types.push(0);
+        types[type] += 1;
         count(node.firstChild, types);
         node = node.nextSibling;
       }
     }
 
     count(e, types);
+    return types;
   }
 };

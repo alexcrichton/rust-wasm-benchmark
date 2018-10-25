@@ -21,7 +21,7 @@ wat2wasm ./raw-wasm/raw.wast -o docs/raw.wasm
 cp target/wasm32-unknown-unknown/release/bm_stdweb.js docs/
 cp target/wasm32-unknown-unknown/release/bm_stdweb.wasm docs/
 
-cp benchmark.js docs/
+ln benchmark.js docs/benchmark.js
 
 ln index.html docs/index.html
 ln index.js docs/index.js
