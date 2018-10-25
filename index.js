@@ -35,6 +35,17 @@ function suite(name, functions) {
     }
   });
 
+  process('call_node_first_child_n_times', f => n => f(n, document.body));
+  process('call_node_node_type_n_times', f => n => f(n, document.body));
+  process('call_node_has_child_nodes_n_times', f => n => f(n, document.body));
+  process('count_node_types', f => {
+    return n => {
+      for (let i = 0; i < n; i++) {
+        f(document.body);
+      }
+    }
+  });
+
   if (name == 'wasm_bindgen') {
     const foo = new Foo();
     const f1 = functions.call_foo_bar_n_times;

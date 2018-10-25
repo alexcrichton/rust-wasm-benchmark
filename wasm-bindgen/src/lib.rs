@@ -1,6 +1,8 @@
 extern crate wasm_bindgen;
+extern crate web_sys;
 
 use wasm_bindgen::prelude::*;
+use web_sys::Node;
 
 #[wasm_bindgen]
 extern {
@@ -113,5 +115,49 @@ pub fn call_first_child_n_times(n: usize, element: &Element) {
 pub fn call_first_child_structural_n_times(n: usize, element: &Element) {
     for _ in 0..n {
         assert!(element.first_child_structural().is_some());
+    }
+}
+
+#[wasm_bindgen]
+pub fn call_node_first_child_n_times(n: usize, element: &Node) {
+    for _ in 0..n {
+        assert!(element.first_child().is_some());
+    }
+}
+
+#[wasm_bindgen]
+pub fn call_node_node_type_n_times(n: usize, element: &Node) {
+    for _ in 0..n {
+        assert!(element.node_type() != 100);
+    }
+}
+
+#[wasm_bindgen]
+pub fn call_node_has_child_nodes_n_times(n: usize, element: &Node) {
+    for _ in 0..n {
+        assert!(element.has_child_nodes());
+    }
+}
+
+#[wasm_bindgen]
+pub fn count_node_types(element: Node) {
+    let mut count = Vec::new();
+    count_node_types(element, &mut count);
+
+    fn count_node_types(mut element: Node, count: &mut Vec<u32>) {
+        loop {
+            let t = element.node_type();
+            if t as usize >= count.len() {
+                count.resize(t as usize + 1, 0);
+            }
+            count[t as usize] += 1;
+            if let Some(s) = element.first_child() {
+                count_node_types(s, count);
+            }
+            match element.next_sibling() {
+                Some(s) => element = s,
+                None => break,
+            }
+        }
     }
 }

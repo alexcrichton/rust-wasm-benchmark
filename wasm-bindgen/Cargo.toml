@@ -5,6 +5,7 @@ authors = ["Alex Crichton <alex@alexcrichton.com>"]
 
 [dependencies]
 wasm-bindgen = "0.2"
+web-sys = { version = "0.3", features = ['Node'] }
 
 [lib]
 crate-type = ['cdylib']

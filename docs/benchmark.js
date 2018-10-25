@@ -31,4 +31,43 @@ window.jsBenchmarks = {
       f(a, b);
     }
   },
+
+  call_node_first_child_n_times: (n, a) => {
+    for (let i = 0; i < n; i++) {
+      if (a.firstChild === null)
+        throw new Error("bad");
+    }
+  },
+
+  call_node_node_type_n_times: (n, a) => {
+    for (let i = 0; i < n; i++) {
+      if (a.nodeType === 100)
+        throw new Error("bad");
+    }
+  },
+
+  call_node_has_child_nodes_n_times: (n, a) => {
+    for (let i = 0; i < n; i++) {
+      if (!a.hasChildNodes())
+        throw new Error("bad");
+    }
+  },
+
+  count_node_types: e => {
+    const types = {};
+
+    function count(node, types) {
+      while(node) {
+        const type = node.nodeType;
+        if (types[node])
+          types[type] += 1;
+        else
+          types[type] = 1;
+        count(node.firstChild, types);
+        node = node.nextSibling;
+      }
+    }
+
+    count(e, types);
+  }
 };

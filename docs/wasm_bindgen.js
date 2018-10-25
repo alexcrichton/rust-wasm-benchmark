@@ -244,6 +244,100 @@
 
     };
 
+    /**
+    * @param {number} arg0
+    * @param {any} arg1
+    * @returns {void}
+    */
+    __exports.call_node_first_child_n_times = function(arg0, arg1) {
+        try {
+            return wasm.call_node_first_child_n_times(arg0, addBorrowedObject(arg1));
+
+        } finally {
+            stack.pop();
+
+        }
+
+    };
+
+    /**
+    * @param {number} arg0
+    * @param {any} arg1
+    * @returns {void}
+    */
+    __exports.call_node_node_type_n_times = function(arg0, arg1) {
+        try {
+            return wasm.call_node_node_type_n_times(arg0, addBorrowedObject(arg1));
+
+        } finally {
+            stack.pop();
+
+        }
+
+    };
+
+    /**
+    * @param {number} arg0
+    * @param {any} arg1
+    * @returns {void}
+    */
+    __exports.call_node_has_child_nodes_n_times = function(arg0, arg1) {
+        try {
+            return wasm.call_node_has_child_nodes_n_times(arg0, addBorrowedObject(arg1));
+
+        } finally {
+            stack.pop();
+
+        }
+
+    };
+
+    /**
+    * @param {any} arg0
+    * @returns {void}
+    */
+    __exports.count_node_types = function(arg0) {
+        return wasm.count_node_types(addHeapObject(arg0));
+    };
+
+    const __widl_f_has_child_nodes_Node_target = Node.prototype.hasChildNodes || function() {
+        throw new Error(`wasm-bindgen: Node.prototype.hasChildNodes does not exist`);
+    };
+
+    __exports.__widl_f_has_child_nodes_Node = function(arg0) {
+        return __widl_f_has_child_nodes_Node_target.call(getObject(arg0)) ? 1 : 0;
+    };
+
+    const __widl_f_node_type_Node_target = GetOwnOrInheritedPropertyDescriptor(Node.prototype, 'nodeType').get || function() {
+        throw new Error(`wasm-bindgen: GetOwnOrInheritedPropertyDescriptor(Node.prototype, 'nodeType').get does not exist`);
+    };
+
+    __exports.__widl_f_node_type_Node = function(arg0) {
+        return __widl_f_node_type_Node_target.call(getObject(arg0));
+    };
+
+    const __widl_f_first_child_Node_target = GetOwnOrInheritedPropertyDescriptor(Node.prototype, 'firstChild').get || function() {
+        throw new Error(`wasm-bindgen: GetOwnOrInheritedPropertyDescriptor(Node.prototype, 'firstChild').get does not exist`);
+    };
+
+    __exports.__widl_f_first_child_Node = function(arg0) {
+
+        const val = __widl_f_first_child_Node_target.call(getObject(arg0));
+        return isLikeNone(val) ? 0 : addHeapObject(val);
+
+    };
+
+    const __widl_f_next_sibling_Node_target = GetOwnOrInheritedPropertyDescriptor(Node.prototype, 'nextSibling').get || function() {
+        throw new Error(`wasm-bindgen: GetOwnOrInheritedPropertyDescriptor(Node.prototype, 'nextSibling').get does not exist`);
+    };
+
+    __exports.__widl_f_next_sibling_Node = function(arg0) {
+
+        const val = __widl_f_next_sibling_Node_target.call(getObject(arg0));
+        return isLikeNone(val) ? 0 : addHeapObject(val);
+
+    };
+
     function dropRef(idx) {
 
         idx = idx >> 1;

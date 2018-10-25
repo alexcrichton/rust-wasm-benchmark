@@ -23,3 +23,11 @@ export function call_first_child_n_times(arg0: number, arg1: any): void;
 
 export function call_first_child_structural_n_times(arg0: number, arg1: any): void;
 
+export function call_node_first_child_n_times(arg0: number, arg1: any): void;
+
+export function call_node_node_type_n_times(arg0: number, arg1: any): void;
+
+export function call_node_has_child_nodes_n_times(arg0: number, arg1: any): void;
+
+export function count_node_types(arg0: any): void;
+
