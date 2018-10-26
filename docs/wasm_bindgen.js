@@ -244,52 +244,42 @@
 
     };
 
+    function passArrayJsValueToWasm(array) {
+        const ptr = wasm.__wbindgen_malloc(array.length * 4);
+        const mem = getUint32Memory();
+        for (let i = 0; i < array.length; i++) {
+            mem[ptr / 4 + i] = addHeapObject(array[i]);
+        }
+        return [ptr, array.length];
+    }
     /**
     * @param {number} arg0
-    * @param {any} arg1
+    * @param {any[]} arg1
     * @returns {void}
     */
     __exports.call_node_first_child_n_times = function(arg0, arg1) {
-        try {
-            return wasm.call_node_first_child_n_times(arg0, addBorrowedObject(arg1));
-
-        } finally {
-            stack.pop();
-
-        }
-
+        const [ptr1, len1] = passArrayJsValueToWasm(arg1);
+        return wasm.call_node_first_child_n_times(arg0, ptr1, len1);
     };
 
     /**
     * @param {number} arg0
-    * @param {any} arg1
+    * @param {any[]} arg1
     * @returns {void}
     */
     __exports.call_node_node_type_n_times = function(arg0, arg1) {
-        try {
-            return wasm.call_node_node_type_n_times(arg0, addBorrowedObject(arg1));
-
-        } finally {
-            stack.pop();
-
-        }
-
+        const [ptr1, len1] = passArrayJsValueToWasm(arg1);
+        return wasm.call_node_node_type_n_times(arg0, ptr1, len1);
     };
 
     /**
     * @param {number} arg0
-    * @param {any} arg1
+    * @param {any[]} arg1
     * @returns {void}
     */
     __exports.call_node_has_child_nodes_n_times = function(arg0, arg1) {
-        try {
-            return wasm.call_node_has_child_nodes_n_times(arg0, addBorrowedObject(arg1));
-
-        } finally {
-            stack.pop();
-
-        }
-
+        const [ptr1, len1] = passArrayJsValueToWasm(arg1);
+        return wasm.call_node_has_child_nodes_n_times(arg0, ptr1, len1);
     };
 
     /**
@@ -363,6 +353,24 @@
     }
 
     __exports.__wbindgen_rethrow = function(idx) { throw takeObject(idx); };
+
+    let cachedTextDecoder = new TextDecoder('utf-8');
+
+    let cachegetUint8Memory = null;
+    function getUint8Memory() {
+        if (cachegetUint8Memory === null || cachegetUint8Memory.buffer !== wasm.memory.buffer) {
+            cachegetUint8Memory = new Uint8Array(wasm.memory.buffer);
+        }
+        return cachegetUint8Memory;
+    }
+
+    function getStringFromWasm(ptr, len) {
+        return cachedTextDecoder.decode(getUint8Memory().subarray(ptr, ptr + len));
+    }
+
+    __exports.__wbindgen_throw = function(ptr, len) {
+        throw new Error(getStringFromWasm(ptr, len));
+    };
 
     function init(wasm_path) {
         const fetchPromise = fetch(wasm_path);

@@ -2,6 +2,7 @@ extern crate wasm_bindgen;
 extern crate web_sys;
 
 use wasm_bindgen::prelude::*;
+use wasm_bindgen::JsCast;
 use web_sys::Node;
 
 #[wasm_bindgen]
@@ -119,23 +120,32 @@ pub fn call_first_child_structural_n_times(n: usize, element: &Element) {
 }
 
 #[wasm_bindgen]
-pub fn call_node_first_child_n_times(n: usize, element: &Node) {
+pub fn call_node_first_child_n_times(n: usize, elements: Vec<JsValue>) {
     for _ in 0..n {
-        assert!(element.first_child().is_some());
+        for element in elements.iter() {
+            let element = element.unchecked_ref::<Node>();
+            assert!(element.first_child().is_some());
+        }
     }
 }
 
 #[wasm_bindgen]
-pub fn call_node_node_type_n_times(n: usize, element: &Node) {
+pub fn call_node_node_type_n_times(n: usize, elements: Vec<JsValue>) {
     for _ in 0..n {
-        assert!(element.node_type() != 100);
+        for element in elements.iter() {
+            let element = element.unchecked_ref::<Node>();
+            assert!(element.node_type() != 100);
+        }
     }
 }
 
 #[wasm_bindgen]
-pub fn call_node_has_child_nodes_n_times(n: usize, element: &Node) {
+pub fn call_node_has_child_nodes_n_times(n: usize, elements: Vec<JsValue>) {
     for _ in 0..n {
-        assert!(element.has_child_nodes());
+        for element in elements.iter() {
+            let element = element.unchecked_ref::<Node>();
+            assert!(element.has_child_nodes());
+        }
     }
 }
 

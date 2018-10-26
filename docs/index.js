@@ -35,9 +35,12 @@ function suite(name, functions) {
     }
   });
 
-  process('call_node_first_child_n_times', f => n => f(n, document.body));
-  process('call_node_node_type_n_times', f => n => f(n, document.body));
-  process('call_node_has_child_nodes_n_times', f => n => f(n, document.body));
+  const list = [];
+  for (let i = 0; i < 10; i++)
+    list.push(document.body);
+  process('call_node_first_child_n_times', f => n => f(n, list));
+  process('call_node_node_type_n_times', f => n => f(n, list));
+  process('call_node_has_child_nodes_n_times', f => n => f(n, list));
   process('count_node_types', f => {
     return n => {
       for (let i = 0; i < n; i++) {

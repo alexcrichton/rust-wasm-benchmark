@@ -34,22 +34,25 @@ window.jsBenchmarks = {
 
   call_node_first_child_n_times: (n, a) => {
     for (let i = 0; i < n; i++) {
-      if (a.firstChild === null)
-        throw new Error("bad");
+      for (const element of a)
+        if (element.firstChild === null)
+          throw new Error("bad");
     }
   },
 
   call_node_node_type_n_times: (n, a) => {
     for (let i = 0; i < n; i++) {
-      if (a.nodeType === 100)
-        throw new Error("bad");
+      for (const element of a)
+        if (element.nodeType === 100)
+          throw new Error("bad");
     }
   },
 
   call_node_has_child_nodes_n_times: (n, a) => {
     for (let i = 0; i < n; i++) {
-      if (!a.hasChildNodes())
-        throw new Error("bad");
+      for (const element of a)
+        if (!element.hasChildNodes())
+          throw new Error("bad");
     }
   },
 
